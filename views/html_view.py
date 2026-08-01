@@ -46,3 +46,51 @@ class HTMLView:
             return f"{size/(1024*1024):.1f} MB"
         else:
             return f"{size/(1024*1024*1024):.1f} GB"
+
+    @staticmethod
+    def _generate_filename(base_name: str = "report") -> str:
+        """
+        Génère un nom de fichier avec timestamp.
+        Format: report_YYYY-MM-DD_HH-MM-SS.html
+        """
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        return f"{base_name}_{timestamp}.html"
+
+    def generate(self, report_data, output_dir='outputs', base_name='report'):
+        """
+        Génère un rapport HTML avec un nom horodaté.
+        
+        Args:
+            report_data: Données du rapport
+            output_dir: Dossier de sortie
+            base_name: Nom de base du fichier (sans extension)
+        
+        Returns:
+            Chemin complet du fichier généré
+        """
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Générer le nom du fichier avec timestamp
+        filename = self._generate_filename(base_name)
+        output_path = os.path.join(output_dir, filename)
+
+        # Charger le template
+        template = self.env.get_template('report.html')
+
+        # Préparer les données pour le template
+        context = {
+            'file_processed': report_data.file_processed,
+            'total_logs': report_data.total_logs,
+            'timestamp': report_data.timestamp,
+            'results': report_data.results,
+            'alerts': report_data.alerts
+        }
+
+        # Générer le HTML
+        html = template.render(**context)
+
+        # Sauvegarder le fichier
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(html)
+
+        return output_path
