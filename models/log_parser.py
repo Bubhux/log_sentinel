@@ -92,3 +92,45 @@ class LogParser:
             if fmt != 'json' and pattern.match(line):
                 return fmt
         return 'unknown'
+
+    @staticmethod
+    def detect_csv_separator(filepath: str) -> str:
+        """Détecte automatiquement le séparateur d'un fichier CSV"""
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                first_lines = [f.readline() for _ in range(5) if f.readline()]
+
+            if not first_lines:
+                return ','
+
+            separators = [',', ';', '|', '\t']
+            counts = {sep: 0 for sep in separators}
+
+            for line in first_lines:
+                for sep in separators:
+                    counts[sep] += line.count(sep)
+
+            best_sep = max(counts, key=counts.get)
+            return best_sep if counts[best_sep] > 0 else ','
+        except:
+            return ','
+
+    @staticmethod
+    def detect_headers(headers: List[str]) -> Dict[str, str]:
+        """Détecte les colonnes et les mappe aux champs standard"""
+        mapping = {}
+
+        for header in headers:
+            header_lower = header.lower().strip()
+            mapped = LogParser.COLUMN_MAPPING.get(header_lower)
+            if mapped:
+                mapping[header] = mapped
+            else:
+                for key, value in LogParser.COLUMN_MAPPING.items():
+                    if key in header_lower or header_lower in key:
+                        mapping[header] = value
+                        break
+                else:
+                    mapping[header] = header_lower
+
+        return mapping
