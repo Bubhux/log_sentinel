@@ -134,3 +134,27 @@ class LogParser:
                     mapping[header] = header_lower
 
         return mapping
+
+    @staticmethod
+    def _clean_value(value: Any) -> Optional[str]:
+        """Nettoie une valeur et retourne None si c'est une valeur nulle"""
+        if value is None:
+            return None
+        value = str(value).strip(' "\'')
+        if not value or value.lower() in LogParser.NULL_VALUES:
+            return None
+        return value
+
+    @staticmethod
+    def _safe_int(value: Any) -> Optional[int]:
+        """Convertit une valeur en int de manière sécurisée"""
+        cleaned = LogParser._clean_value(value)
+        if cleaned is None:
+            return None
+        try:
+            return int(cleaned)
+        except ValueError:
+            match = re.search(r'(\d+)', cleaned)
+            if match:
+                return int(match.group(1))
+            return None
