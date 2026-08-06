@@ -158,3 +158,142 @@ class LogParser:
             if match:
                 return int(match.group(1))
             return None
+
+    @staticmethod
+    def _parse_timestamp_robust(timestamp_str: Any) -> str:
+        """Parse un timestamp dans plusieurs formats et retourne ISO"""
+        if not timestamp_str:
+            return datetime.now().isoformat()
+
+        timestamp_str = str(timestamp_str).strip(' "\'')
+
+        try:
+            dt = datetime.fromisoformat(timestamp_str)
+            return dt.isoformat()
+        except ValueError:
+            pass
+
+        for fmt in LogParser.TIMESTAMP_FORMATS:
+            try:
+                dt = datetime.strptime(timestamp_str, fmt)
+                return dt.isoformat()
+            except ValueError:
+                continue
+
+        try:
+            dt = datetime.fromtimestamp(float(timestamp_str))
+            return dt.isoformat()
+        except:
+            pass
+
+        logger.warning(f"Timestamp non reconnu: {timestamp_str}")
+        return datetime.now().isoformat()
+
+    @staticmethod
+    def parse_line(line: str, format_type: str = None) -> Optional[Dict]:
+        """Parse une ligne de log et retourne un dictionnaire structuré"""
+        line = line.strip()
+        if not line:
+            return None
+
+        if format_type is None:
+            format_type = LogParser.detect_format(line)
+
+        # --- Syslog ---
+        if format_type == 'syslog':
+            match = LogParser.PATTERNS['syslog'].match(line)
+            if match:
+                timestamp, host, service, pid, message = match.groups()
+                ip_pattern = r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
+                user_pattern = r'user\s+(\w+)'
+                port_pattern = r'port\s+(\d+)'
+
+                return {
+                    'timestamp': LogParser._parse_timestamp_robust(timestamp),
+                    'host': host,
+                    'service': service,
+                    'pid': LogParser._safe_int(pid),
+                    'message': message,
+                    'src_ip': LogParser._clean_value(re.search(ip_pattern, message).group(1) if re.search(ip_pattern, message) else None),
+                    'dst_ip': None,
+                    'user': LogParser._clean_value(re.search(user_pattern, message).group(1) if re.search(user_pattern, message) else None),
+                    'port': LogParser._safe_int(re.search(port_pattern, message).group(1)) if re.search(port_pattern, message) else None,
+                    'status': 'success' if 'accepted' in message.lower() else 'failed' if 'failed' in message.lower() else 'unknown'
+                }
+
+        # --- Apache ---
+        elif format_type == 'apache':
+            match = LogParser.PATTERNS['apache'].match(line)
+            if match:
+                src_ip, timestamp, method, url, protocol, status, size = match.groups()
+                return {
+                    'timestamp': LogParser._parse_timestamp_robust(timestamp),
+                    'src_ip': LogParser._clean_value(src_ip),
+                    'dst_ip': None,
+                    'method': method,
+                    'url': url,
+                    'protocol': protocol,
+                    'status': LogParser._safe_int(status),
+                    'size': LogParser._safe_int(size),
+                    'user': None,
+                    'port': None,
+                    'message': f"{method} {url} {protocol}"
+                }
+
+        # --- Windows Events (NOUVEAU) ---
+        elif format_type == 'windows_events':
+            # Format: EventID=4625, User=admin, SourceIP=45.33.22.11, ...
+            try:
+                # Extraire les paires clé=valeur
+                parts = line.split(',')
+                data = {}
+                for part in parts:
+                    part = part.strip()
+                    if '=' in part:
+                        key, value = part.split('=', 1)
+                        data[key.strip()] = value.strip()
+
+                # Construire l'entrée
+                return {
+                    'timestamp': LogParser._parse_timestamp_robust(data.get('Timestamp', '')),
+                    'src_ip': LogParser._clean_value(data.get('SourceIP')),
+                    'dst_ip': LogParser._clean_value(data.get('DestIP')),
+                    'user': LogParser._clean_value(data.get('User')),
+                    'port': LogParser._safe_int(data.get('Port')),
+                    'status': LogParser._clean_value(data.get('Status', 'unknown')) or 'unknown',
+                    'message': data.get('Message', ''),
+                    'service': LogParser._clean_value(data.get('ServiceName')),
+                    'event_id': LogParser._safe_int(data.get('EventID')),
+                    'host': LogParser._clean_value(data.get('Host')),
+                }
+            except Exception as e:
+                logger.warning(f"Erreur parsing Windows Events: {e}")
+                return None
+
+        # --- Custom / CSV (pour les lignes simples) ---
+        elif format_type == 'custom' or format_type == 'csv':
+            parts = line.split(',')
+            if len(parts) >= 6:
+                try:
+                    return {
+                        'timestamp': LogParser._parse_timestamp_robust(parts[0]),
+                        'src_ip': LogParser._clean_value(parts[1]) if len(parts) > 1 else None,
+                        'dst_ip': LogParser._clean_value(parts[2]) if len(parts) > 2 else None,
+                        'user': LogParser._clean_value(parts[3]) if len(parts) > 3 else None,
+                        'port': LogParser._safe_int(parts[4]) if len(parts) > 4 else None,
+                        'status': LogParser._clean_value(parts[5]) if len(parts) > 5 else 'unknown',
+                        'message': parts[6] if len(parts) > 6 else ''
+                    }
+                except Exception as e:
+                    logger.warning(
+                        f"Erreur parsing ligne CSV: {e} - {line[:100]}")
+
+        # --- JSON ---
+        elif format_type == 'json':
+            try:
+                data = json.loads(line)
+                return LogParser._parse_json_object(data)
+            except:
+                return None
+
+        return None
