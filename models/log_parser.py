@@ -297,3 +297,60 @@ class LogParser:
                 return None
 
         return None
+
+    @staticmethod
+    def _parse_json_object(data: Dict) -> Dict:
+        """Parse un objet JSON en dictionnaire structuré"""
+        mapped = {}
+
+        for key in ['timestamp', 'time', 'date', 'ts', 'datetime']:
+            if key in data:
+                mapped['timestamp'] = LogParser._parse_timestamp_robust(
+                    data[key])
+                break
+        if 'timestamp' not in mapped:
+            mapped['timestamp'] = datetime.now().isoformat()
+
+        for key in ['src_ip', 'source_ip', 'src', 'source', 'client_ip', 'remote_ip']:
+            if key in data:
+                mapped['src_ip'] = LogParser._clean_value(data[key])
+                break
+
+        for key in ['dst_ip', 'dest_ip', 'dst', 'dest', 'target_ip']:
+            if key in data:
+                mapped['dst_ip'] = LogParser._clean_value(data[key])
+                break
+
+        for key in ['user', 'username', 'account', 'login']:
+            if key in data:
+                mapped['user'] = LogParser._clean_value(data[key])
+                break
+
+        for key in ['port', 'dst_port', 'dest_port']:
+            if key in data:
+                mapped['port'] = LogParser._safe_int(data[key])
+                break
+
+        for key in ['status', 'result', 'action', 'outcome']:
+            if key in data:
+                mapped['status'] = LogParser._clean_value(
+                    data[key]) or 'unknown'
+                break
+        if 'status' not in mapped:
+            mapped['status'] = 'unknown'
+
+        for key in ['message', 'msg', 'text', 'description']:
+            if key in data:
+                mapped['message'] = str(data[key])
+                break
+        if 'message' not in mapped:
+            mapped['message'] = ''
+
+        for key in ['service', 'protocol', 'host', 'method', 'url', 'size']:
+            if key in data:
+                if key == 'size':
+                    mapped[key] = LogParser._safe_int(data[key])
+                else:
+                    mapped[key] = LogParser._clean_value(data[key])
+
+        return mapped
