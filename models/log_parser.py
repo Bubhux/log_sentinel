@@ -354,3 +354,63 @@ class LogParser:
                     mapped[key] = LogParser._clean_value(data[key])
 
         return mapped
+
+    @staticmethod
+    def parse_csv_file(filepath: str) -> List[Dict]:
+        """Parse un fichier CSV avec détection automatique du séparateur et des colonnes"""
+        logs = []
+
+        separator = LogParser.detect_csv_separator(filepath)
+        logger.info(f"Séparateur détecté: '{separator}'")
+
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                first_line = f.readline().strip()
+                if not first_line:
+                    return []
+
+                headers = first_line.split(separator)
+                headers = [h.strip(' "\'') for h in headers]
+
+                column_mapping = LogParser.detect_headers(headers)
+                logger.info(f"Mapping colonnes: {column_mapping}")
+
+                reader = csv.reader(f, delimiter=separator)
+
+                for row_num, row in enumerate(reader, 1):
+                    try:
+                        log_entry = {}
+                        for idx, value in enumerate(row):
+                            if idx < len(headers):
+                                header = headers[idx]
+                                field = column_mapping.get(
+                                    header, header.lower())
+                                log_entry[field] = value
+
+                        normalized = {
+                            'timestamp': LogParser._parse_timestamp_robust(log_entry.get('timestamp', '')),
+                            'src_ip': LogParser._clean_value(log_entry.get('src_ip')),
+                            'dst_ip': LogParser._clean_value(log_entry.get('dst_ip')),
+                            'user': LogParser._clean_value(log_entry.get('user')),
+                            'port': LogParser._safe_int(log_entry.get('port')),
+                            'src_port': LogParser._safe_int(log_entry.get('src_port')),
+                            'status': LogParser._clean_value(log_entry.get('status', 'unknown')) or 'unknown',
+                            'message': log_entry.get('message', ''),
+                            'service': LogParser._clean_value(log_entry.get('service')),
+                            'protocol': LogParser._clean_value(log_entry.get('protocol')),
+                            'host': LogParser._clean_value(log_entry.get('host')),
+                            'method': LogParser._clean_value(log_entry.get('method')),
+                            'url': LogParser._clean_value(log_entry.get('url')),
+                            'size': LogParser._safe_int(log_entry.get('size')),
+                        }
+                        normalized = {k: v for k, v in normalized.items() if v is not None or k in [
+                            'timestamp', 'status']}
+                        logs.append(normalized)
+                    except Exception as e:
+                        logger.warning(f"Erreur ligne CSV {row_num}: {e}")
+                        continue
+
+        except Exception as e:
+            logger.error(f"Erreur lors du parsing CSV: {e}")
+
+        return logs
