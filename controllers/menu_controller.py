@@ -36,3 +36,9 @@ class MenuController:
                 break
             except Exception as e:
                 print(f"❌ Erreur: {e}")
+
+    def _get_logs_files(self) -> list:
+        """Retourne la liste des fichiers de logs dans le dossier logs/"""
+        if not os.path.exists('logs'):
+            os.makedirs('logs')
+        return [f for f in os.listdir('logs') if os.path.isfile(os.path.join('logs', f))]
