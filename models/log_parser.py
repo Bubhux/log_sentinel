@@ -414,3 +414,32 @@ class LogParser:
             logger.error(f"Erreur lors du parsing CSV: {e}")
 
         return logs
+
+    @staticmethod
+    def parse_json_file(filepath: str) -> List[Dict]:
+        """Parse un fichier JSON (ligne par ligne ou tableau)"""
+        logs = []
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                content = f.read().strip()
+
+            if content.startswith('['):
+                data = json.loads(content)
+                if isinstance(data, list):
+                    for item in data:
+                        if isinstance(item, dict):
+                            logs.append(LogParser._parse_json_object(item))
+            else:
+                for line in content.splitlines():
+                    line = line.strip()
+                    if line:
+                        try:
+                            data = json.loads(line)
+                            if isinstance(data, dict):
+                                logs.append(LogParser._parse_json_object(data))
+                        except:
+                            continue
+        except Exception as e:
+            logger.error(f"Erreur parsing JSON: {e}")
+
+        return logs
