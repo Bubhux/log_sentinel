@@ -443,3 +443,25 @@ class LogParser:
             logger.error(f"Erreur parsing JSON: {e}")
 
         return logs
+
+    @staticmethod
+    def parse_file(filepath: str) -> List[Dict]:
+        """Parse un fichier avec détection automatique du format"""
+        logs = []
+
+        if not os.path.exists(filepath):
+            logger.error(f"Fichier introuvable: {filepath}")
+            return []
+
+        if filepath.lower().endswith('.json'):
+            return LogParser.parse_json_file(filepath)
+
+        if filepath.lower().endswith('.csv'):
+            return LogParser.parse_csv_file(filepath)
+
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+        except Exception as e:
+            logger.error(f"Erreur lecture fichier {filepath}: {e}")
+            return []
