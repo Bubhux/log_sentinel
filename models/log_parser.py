@@ -465,3 +465,13 @@ class LogParser:
         except Exception as e:
             logger.error(f"Erreur lecture fichier {filepath}: {e}")
             return []
+
+        format_type = 'unknown'
+        valid_lines = [line for line in lines if line.strip()]
+        for i in range(min(5, len(valid_lines))):
+            detected = LogParser.detect_format(valid_lines[i])
+            if detected != 'unknown':
+                format_type = detected
+                break
+
+        logger.info(f"Format détecté: {format_type}")
