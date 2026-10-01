@@ -475,3 +475,16 @@ class LogParser:
                 break
 
         logger.info(f"Format détecté: {format_type}")
+
+        for line_num, line in enumerate(lines, 1):
+            try:
+                parsed = LogParser.parse_line(line, format_type)
+                if parsed:
+                    logs.append(parsed)
+            except Exception as e:
+                logger.warning(f"Erreur parsing ligne {line_num}: {e}")
+                continue
+
+        logger.info(
+            f"Parsing terminé: {len(logs)} entrées valides sur {len(lines)} lignes")
+        return logs
