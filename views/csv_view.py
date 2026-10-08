@@ -28,3 +28,8 @@ class CSVView:
         Returns:
             Chemin complet du fichier généré
         """
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Générer le nom du fichier avec timestamp
+        filename = CSVView._generate_filename(base_name)
+        output_path = os.path.join(output_dir, filename)
