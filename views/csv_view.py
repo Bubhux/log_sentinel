@@ -33,3 +33,13 @@ class CSVView:
         # Générer le nom du fichier avec timestamp
         filename = CSVView._generate_filename(base_name)
         output_path = os.path.join(output_dir, filename)
+
+        with open(output_path, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+
+            # En-tête
+            writer.writerow(['Log Analyzer - Rapport'])
+            writer.writerow(['Fichier', report_data.file_processed])
+            writer.writerow(['Total logs', report_data.total_logs])
+            writer.writerow(['Timestamp', report_data.timestamp])
+            writer.writerow([])
