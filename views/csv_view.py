@@ -43,3 +43,19 @@ class CSVView:
             writer.writerow(['Total logs', report_data.total_logs])
             writer.writerow(['Timestamp', report_data.timestamp])
             writer.writerow([])
+
+            # Résultats par catégorie
+            for category, data in report_data.results.items():
+                if data:
+                    writer.writerow([category.replace('_', ' ').upper()])
+                    for key, value in data.items():
+                        writer.writerow([key, str(value)])
+                    writer.writerow([])
+
+            # Alertes
+            if report_data.alerts:
+                writer.writerow(['ALERTES'])
+                for alert in report_data.alerts:
+                    writer.writerow(['⚠️', alert])
+
+        return output_path
