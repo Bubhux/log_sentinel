@@ -18,3 +18,21 @@ class AnalyzerController:
         # Parsing des logs
         logs = self.parser.parse_file(filepath)
         print(f"✅ {len(logs)} entrées de log parsées")
+
+        # Traitement des logs par le moteur
+        for log in logs:
+            self.engine.process_log(log)
+
+        # Génération des résultats
+        results = self.engine.get_results()
+
+        # Création du rapport
+        report_data = ReportData(
+            results=results,
+            file_processed=filepath,
+            total_logs=len(logs),
+            timestamp=datetime.now().isoformat(),
+            alerts=self.engine.alert_log
+        )
+
+        return report_data
