@@ -2,6 +2,8 @@ import os
 from models.database import Database
 from views.terminal_view import TerminalView
 from views.html_view import HTMLView
+from views.csv_view import CSVView
+from controllers.analyzer_controller import AnalyzerController
 
 
 class MenuController:
@@ -12,6 +14,7 @@ class MenuController:
         self.output_format = 'terminal'  # default
         self.view = TerminalView()
         self.html_view = HTMLView()
+        self.csv_view = CSVView()
 
     def run(self):
         """Boucle principale du menu"""
@@ -42,3 +45,22 @@ class MenuController:
         if not os.path.exists('logs'):
             os.makedirs('logs')
         return [f for f in os.listdir('logs') if os.path.isfile(os.path.join('logs', f))]
+
+    def _resolve_file_input(self, file_input: str) -> str:
+        """
+        Résout l'entrée utilisateur (numéro ou nom) en chemin complet.
+        Retourne None si non trouvé.
+        """
+        if not file_input:
+            return None
+
+        files = self._get_logs_files()
+
+        # 1. Vérifier si c'est un numéro
+        if file_input.isdigit():
+            try:
+                index = int(file_input) - 1
+                if 0 <= index < len(files):
+                    return os.path.join('logs', files[index])
+            except:
+                pass
