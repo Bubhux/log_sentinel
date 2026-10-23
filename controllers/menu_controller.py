@@ -64,3 +64,22 @@ class MenuController:
                     return os.path.join('logs', files[index])
             except:
                 pass
+
+        # 2. Vérifier si c'est le nom d'un fichier dans logs/
+        for f in files:
+            if f == file_input:
+                return os.path.join('logs', f)
+            # Comparaison insensible à la casse
+            if f.lower() == file_input.lower():
+                return os.path.join('logs', f)
+
+        # 3. Vérifier si c'est un chemin complet existant
+        if os.path.exists(file_input):
+            return file_input
+
+        # 4. Vérifier si le fichier existe avec un chemin relatif
+        if os.path.exists(os.path.join('logs', file_input)):
+            return os.path.join('logs', file_input)
+
+        # Rien trouvé
+        return None
