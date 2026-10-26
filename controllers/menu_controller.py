@@ -83,3 +83,14 @@ class MenuController:
 
         # Rien trouvé
         return None
+
+    def _handle_analyze(self):
+        """Gère l'analyse d'un fichier"""
+        files = self._get_logs_files()
+
+        print("\n📁 Fichiers disponibles dans le dossier 'logs/':")
+        if not files:
+            print("  (Aucun fichier trouvé - placez vos fichiers dans 'logs/')")
+        else:
+            for i, f in enumerate(files, 1):
+                print(f"  {i}. {f}")
