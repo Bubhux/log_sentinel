@@ -94,3 +94,10 @@ class MenuController:
         else:
             for i, f in enumerate(files, 1):
                 print(f"  {i}. {f}")
+
+        print("\n💡 Entrez le numéro ou le nom du fichier.")
+        file_input = input("Fichier à analyser: ").strip()
+
+        if not file_input:
+            print("❌ Aucun fichier spécifié.")
+            return
