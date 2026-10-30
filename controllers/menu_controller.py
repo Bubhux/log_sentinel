@@ -101,3 +101,13 @@ class MenuController:
         if not file_input:
             print("❌ Aucun fichier spécifié.")
             return
+
+        # Résoudre le fichier (numéro ou nom)
+        resolved_path = self._resolve_file_input(file_input)
+
+        if not resolved_path:
+            # Essayer d'afficher les suggestions proches
+            suggestions = []
+            for f in files:
+                if file_input.lower() in f.lower():
+                    suggestions.append(f)
