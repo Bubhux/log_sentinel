@@ -111,3 +111,13 @@ class MenuController:
             for f in files:
                 if file_input.lower() in f.lower():
                     suggestions.append(f)
+
+            if suggestions:
+                print(f"❌ Fichier introuvable. Avez-vous voulu dire:")
+                for s in suggestions:
+                    print(f"  -> {s}")
+            else:
+                print(f"❌ Fichier introuvable: '{file_input}'")
+            return
+
+        print(f"✅ Fichier sélectionné: {resolved_path}")
