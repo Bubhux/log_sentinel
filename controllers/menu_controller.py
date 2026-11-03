@@ -121,3 +121,7 @@ class MenuController:
             return
 
         print(f"✅ Fichier sélectionné: {resolved_path}")
+
+        # Lancer l'analyse
+        controller = AnalyzerController()
+        report_data = controller.analyze_file(resolved_path)
