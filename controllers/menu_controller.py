@@ -125,3 +125,8 @@ class MenuController:
         # Lancer l'analyse
         controller = AnalyzerController()
         report_data = controller.analyze_file(resolved_path)
+
+        if report_data:
+            # Afficher selon le format choisi
+            if self.output_format in ['terminal', 'html+terminal']:
+                TerminalView.display_results(report_data)
