@@ -130,3 +130,12 @@ class MenuController:
             # Afficher selon le format choisi
             if self.output_format in ['terminal', 'html+terminal']:
                 TerminalView.display_results(report_data)
+
+            if self.output_format in ['html', 'html+csv']:
+                # Générer le rapport HTML avec nom horodaté
+                html_path = self.html_view.generate(
+                    report_data,
+                    output_dir='outputs',
+                    base_name='report'
+                )
+                print(f"📄 Rapport HTML généré: {html_path}")
