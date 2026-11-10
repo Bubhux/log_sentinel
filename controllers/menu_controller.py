@@ -139,3 +139,12 @@ class MenuController:
                     base_name='report'
                 )
                 print(f"📄 Rapport HTML généré: {html_path}")
+
+            if self.output_format in ['csv', 'html+csv']:
+                # Générer le rapport CSV avec nom horodaté
+                csv_path = self.csv_view.generate(
+                    report_data,
+                    output_dir='outputs',
+                    base_name='report'
+                )
+                print(f"📊 Rapport CSV généré: {csv_path}")
