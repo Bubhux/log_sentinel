@@ -148,3 +148,7 @@ class MenuController:
                     base_name='report'
                 )
                 print(f"📊 Rapport CSV généré: {csv_path}")
+
+            # Sauvegarder dans la base
+            self.db.save_analysis(report_data)
+
