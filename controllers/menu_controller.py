@@ -152,3 +152,9 @@ class MenuController:
             # Sauvegarder dans la base
             self.db.save_analysis(report_data)
 
+    def _handle_history(self):
+        """Affiche l'historique"""
+        history = self.db.get_history()
+        if not history:
+            print("📭 Aucune analyse dans l'historique.")
+            return
