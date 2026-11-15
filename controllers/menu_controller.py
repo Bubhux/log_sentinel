@@ -158,3 +158,9 @@ class MenuController:
         if not history:
             print("📭 Aucune analyse dans l'historique.")
             return
+
+        print("\n📊 HISTORIQUE DES ANALYSES")
+        print("-"*80)
+        for row in history:
+            print(
+                f"ID: {row[0]} | {row[1]} | Fichier: {row[2]} | Logs: {row[3]} | Top IP: {row[4]} | Alertes: {row[6]}")
