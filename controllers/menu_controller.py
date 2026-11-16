@@ -164,3 +164,6 @@ class MenuController:
         for row in history:
             print(
                 f"ID: {row[0]} | {row[1]} | Fichier: {row[2]} | Logs: {row[3]} | Top IP: {row[4]} | Alertes: {row[6]}")
+
+    def _handle_output_options(self):
+        """Gère le changement de format de sortie"""
